@@ -1,113 +1,187 @@
 # FairFrame
 
-**Your Pocket Chief Photographer.**
+# Teach People How To See.
 
-AI-powered visual storytelling coach for photographers, MMJs, videographers, and field shooters.
+FairFrame is an AI-powered visual storytelling coach designed to help photographers, creators, journalists, and visual storytellers improve their ability to communicate through still images.
 
-## Features
+At the center of FairFrame is **Chief**, an AI mentor built to evaluate images through observation, visual communication, storytelling, and craft.
 
-- Full MVP screen flow (welcome → auth → camera → analysis → scorecard results)
-- **Supabase Auth** — email/password, magic link, Google, Apple, anonymous guest
-- **OpenAI Chief** — via Supabase Edge Function `analyze-frame` (keeps API key server-side)
-- **Analysis history** — saved for signed-in (non-guest) users with RLS
-- Dark professional UI + generated viewfinder app icons
+Most photography tools teach people how to use cameras.
 
-## Stack
+**FairFrame teaches people how to see.**
 
-- **Expo SDK 54** (React Native 0.81, React 19)
-- **Expo Router 6**
-- **Supabase** + Edge Function for OpenAI Chief
+---
 
-## Quick start
+## Why FairFrame Exists
 
-**Expo SDK 54** — required for current Expo Go on iOS/Android.
+Modern platforms reward:
 
-**Node version:** Use **Node 22 LTS** (not Node 24), minimum **20.19.4**.
+- Speed
+- Scrolling
+- Attention addiction
+- Quantity over quality
 
-```bash
-node -v   # should be v22.x (e.g. v22.22.0)
-```
+FairFrame rewards:
 
-```bash
-cd ~/fairframe
-cp .env.example .env
-# Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
+- Observation
+- Intentionality
+- Storytelling
+- Visual judgment
+- Craftsmanship
 
-npm install
-npx expo install --fix
-npm run generate-icons   # optional — branded PNG assets
-npx expo start
-```
+The goal is not to tell users whether a photo is "good" or "bad."
 
-**Phone testing:** see [START.md](./START.md) if Expo Go or localhost:8081 does not work.
+The goal is to help them become stronger visual storytellers over time.
 
-**Live Chief (OpenAI):** see [docs/LIVE_CHIEF_INTEGRATION.md](./docs/LIVE_CHIEF_INTEGRATION.md) — reports show **LIVE CHIEF** or **OFFLINE PREVIEW** at the top.
+---
 
-## Supabase setup
+## Meet Chief
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Copy **Project URL** and **publishable (anon) key** into `.env`.
-3. Apply the schema:
+Chief is FairFrame's AI visual storytelling coach.
 
-   ```bash
-   supabase link --project-ref YOUR_REF
-   supabase db push
-   ```
+Chief does not simply score images.
 
-   Or run `supabase/migrations/20250601180000_init_fairframe.sql` in the SQL editor.
+Chief observes them.
 
-4. **Auth providers** (Authentication → Providers):
-   - Enable **Email**
-   - Enable **Google** and **Apple** (add OAuth client IDs)
-   - Enable **Anonymous** sign-ins (for guest mode)
+Before evaluating a photo, Chief is designed to:
 
-5. **Redirect URLs** (Authentication → URL Configuration):
-   - `fairframe://auth/callback`
-   - `exp://127.0.0.1:8081/--/auth/callback` (Expo Go)
+1. Identify the scene
+2. Recognize visible objects
+3. Analyze visual hierarchy
+4. Evaluate communication
+5. Assess storytelling potential
+6. Recommend improvements
 
-## OpenAI / Edge Function
+Every critique is designed to feel like a veteran chief photographer reviewing the image in real time.
 
-Deploy the Chief analyzer:
+Chief's goal is not to judge photographers.
 
-```bash
-supabase secrets set OPENAI_API_KEY=sk-your-key
-supabase functions deploy analyze-frame
-```
+Chief's goal is to help them grow.
 
-The app calls `analyze-frame` with the frame as base64. If the function is unavailable, Chief falls back to an offline preview analysis.
+---
 
-`verify_jwt` is disabled on the function so guests can analyze; authenticated users still send their JWT for future rate-limiting.
+## Chief's Evaluation Framework
 
-## Project structure
+Every image is evaluated across six pillars:
 
-```
-app/                         # Expo Router screens
-src/
-  lib/                       # Supabase client, OAuth session helper
-  context/                   # Auth + capture session state
-  services/                  # chief.ts, analysisHistory, mockChief
-supabase/
-  migrations/                # profiles + analysis_history (RLS)
-  functions/analyze-frame/   # OpenAI vision + JSON scorecard
-scripts/generate-icons.mjs   # Viewfinder brand assets
-```
+### Communication
+What is this image saying?
 
-## Environment variables
+### Focus
+Where does the eye land first?
 
-| Variable | Where |
-|----------|--------|
-| `EXPO_PUBLIC_SUPABASE_URL` | `.env` |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `.env` |
-| `OPENAI_API_KEY` | Supabase Edge Function secret only |
+### Clarity
+Can the viewer understand the image quickly?
 
-Never put OpenAI keys in `EXPO_PUBLIC_*` variables.
+### Context
+Does the image communicate where we are?
 
-## Next steps
+### Storytelling
+Does the image create understanding or curiosity?
 
-- FairScore aggregation from `analysis_history`
-- Image storage bucket for frame thumbnails
-- Achievements and subscriptions
+### Craft
+How well is the image executed?
 
-## License
+These categories combine into a:
 
-Private — FairFrame.
+## Visual Storytelling Score
+
+---
+
+## Current Features
+
+### MVP Features
+
+- Photo capture and upload
+- AI-powered image analysis
+- Chief's Assessment
+- Visual Storytelling Score
+- Communication scoring
+- Focus scoring
+- Clarity scoring
+- Context scoring
+- Storytelling scoring
+- Craft scoring
+- Analysis history
+- User authentication
+- Guest mode
+- Supabase backend integration
+- OpenAI-powered Chief architecture
+
+---
+
+## Current Status
+
+### Completed
+
+- MVP application
+- Expo mobile app
+- Authentication system
+- Analysis history
+- GitHub repository
+- Supabase integration
+- OpenAI integration architecture
+
+### In Progress
+
+- Live Chief testing
+- Scene recognition improvements
+- Visual hierarchy analysis
+- Image-specific critiques
+
+### Planned
+
+- FairScore
+- Achievement system
+- Progress tracking
+- Public creator profiles
+- FairFrame Top 100
+- Subscription features
+- Advanced coaching tools
+
+---
+
+## Technology Stack
+
+- Expo SDK 54
+- React Native
+- Expo Router
+- Supabase
+- OpenAI
+- Edge Functions
+
+---
+
+## Founder
+
+### Jeremy Fair
+
+4x New England Emmy-nominated television photojournalist, visual storyteller, and FAA Part 107 drone pilot.
+
+FairFrame was created from a simple belief:
+
+> Great images are not created by better cameras.
+>
+> They are created by better observation.
+
+---
+
+## Mission
+
+Teach People How To See.
+
+---
+
+## Vision
+
+To become the world's most trusted AI visual storytelling coach.
+
+---
+
+## Ownership
+
+FairFrame is an active proprietary project created by Jeremy Fair.
+
+The repository is publicly visible for transparency and development purposes.
+
+All rights reserved unless otherwise specified.

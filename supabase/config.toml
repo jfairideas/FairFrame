@@ -1,0 +1,25 @@
+# FairFrame Supabase local config
+# See https://supabase.com/docs/guides/cli/config
+
+project_id = "eaficgjjvtekrqcxlaoy"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "fairframe://auth/callback"
+additional_redirect_urls = ["fairframe://auth/callback", "exp://127.0.0.1:8081/--/auth/callback"]
+
+[auth.external.google]
+enabled = true
+
+[auth.external.apple]
+enabled = true
+
+[functions.analyze-frame]
+verify_jwt = false

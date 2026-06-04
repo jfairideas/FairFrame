@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../src/components/Screen";
 import { useSession } from "../src/context/SessionContext";
@@ -8,16 +8,20 @@ import { analyzeWithChief } from "../src/services/chief";
 import { colors, spacing, typography } from "../src/theme";
 
 const STEPS = [
-  "Identifying the scene…",
-  "Listing what's visible in the frame…",
-  "Mapping visual hierarchy — what pulls the eye…",
-  "Evaluating storytelling — then scoring…",
+  "What am I looking at?",
+  "What grabbed my attention first?",
+  "Does that attention create value?",
+  "FairScore and your assignment…",
 ];
 
 export default function AnalysisLoadingScreen() {
   const router = useRouter();
   const { session, setResult, setAnalysisSource, setChiefFallbackReason } = useSession();
   const [stepIndex, setStepIndex] = useState(0);
+  const analysisStartedRef = useRef(false);
+  const requestIdRef = useRef(
+    `analysis-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  );
 
   useEffect(() => {
     const stepTimer = setInterval(() => {
@@ -32,26 +36,30 @@ export default function AnalysisLoadingScreen() {
       return;
     }
 
+    if (analysisStartedRef.current) {
+      return;
+    }
+    analysisStartedRef.current = true;
+
     let cancelled = false;
 
-    analyzeWithChief(session).then(async ({ result, source, fallbackReason }) => {
-      if (cancelled) return;
-      setResult(result);
-      setAnalysisSource(source);
-      setChiefFallbackReason(fallbackReason ?? null);
-      await saveAnalysisHistory(session, result, source);
-      router.replace("/results");
-    });
+    analyzeWithChief(session, { requestId: requestIdRef.current }).then(
+      async ({ result, source, fallbackReason }) => {
+        if (cancelled) return;
+        setResult(result);
+        setAnalysisSource(source);
+        setChiefFallbackReason(fallbackReason ?? null);
+        await saveAnalysisHistory(session, result, source);
+        router.replace("/results");
+      }
+    );
 
     return () => {
       cancelled = true;
     };
   }, [session, setResult, setAnalysisSource, setChiefFallbackReason, router]);
 
-  const loadingTitle =
-    session?.phase === "enhanced"
-      ? "Chief is deepening the report with your story context"
-      : "Chief is observing your frame";
+  const loadingTitle = "Chief is observing your frame";
 
   return (
     <Screen>
@@ -62,7 +70,9 @@ export default function AnalysisLoadingScreen() {
         <ActivityIndicator size="large" color={colors.accent} style={styles.spinner} />
         <Text style={styles.title}>{loadingTitle}</Text>
         <Text style={styles.step}>{STEPS[stepIndex]}</Text>
-        <Text style={styles.note}>Sending frame to Live Chief when Supabase is configured…</Text>
+        <Text style={styles.note}>
+          Live Chief runs only for the founder account during beta; others see offline preview.
+        </Text>
       </View>
     </Screen>
   );

@@ -1,9 +1,5 @@
-import type { ReportPhase, SceneType } from "../types/analysis";
-
-export function reportPhaseLabel(phase: ReportPhase): string {
-  return phase === "enhanced" ? "Enhanced Report" : "Chief Report";
-}
+import type { SceneType } from "../types/analysis";
 
 export function sceneTypeLabel(scene: SceneType): string {
-  return scene === "subject-present" ? "Subject Present" : "Location Scout";
+  return scene === "subject-present" ? "Subject present" : "Location";
 }

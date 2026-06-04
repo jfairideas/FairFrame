@@ -33,7 +33,7 @@ export default function CaptureScreen() {
   const capture = async () => {
     const photo = await cameraRef.current?.takePictureAsync({ quality: 0.85 });
     if (!photo?.uri) return;
-    setSession({ imageUri: photo.uri, phase: "initial" });
+    setSession({ imageUri: photo.uri });
     router.push("/analysis-loading");
   };
 

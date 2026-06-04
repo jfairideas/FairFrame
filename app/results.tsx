@@ -2,20 +2,18 @@ import { useRouter } from "expo-router";
 import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/Button";
 import { Card } from "../src/components/Card";
-import { ChiefObservation } from "../src/components/ChiefObservation";
+import { ChiefSourceBanner } from "../src/components/ChiefSourceBanner";
+import { ExpandableFullAnalysis } from "../src/components/ExpandableFullAnalysis";
+import { FairScoreCard } from "../src/components/FairScoreCard";
 import { Label } from "../src/components/Label";
 import { ListSection } from "../src/components/ListSection";
-import { PillarScores } from "../src/components/PillarScores";
-import { ScoreRing } from "../src/components/ScoreRing";
 import { Screen } from "../src/components/Screen";
-import { ChiefSourceBanner } from "../src/components/ChiefSourceBanner";
-import { WhatChiefSees } from "../src/components/WhatChiefSees";
 import { useAuth } from "../src/context/AuthContext";
 import { useSession } from "../src/context/SessionContext";
 import { colors, spacing, typography } from "../src/theme";
-import { reportPhaseLabel, sceneTypeLabel } from "../src/utils/labels";
+import { imageTypeLabel } from "../src/utils/imageType";
 
-const HERO_HEIGHT = Math.round(Dimensions.get("window").height * 0.46);
+const HERO_HEIGHT = Math.round(Dimensions.get("window").height * 0.42);
 
 export default function ResultsScreen() {
   const router = useRouter();
@@ -30,8 +28,6 @@ export default function ResultsScreen() {
       </Screen>
     );
   }
-
-  const canEnhance = result.phase === "initial" && !session?.storyContext;
 
   const newShot = () => {
     reset();
@@ -51,66 +47,44 @@ export default function ResultsScreen() {
       )}
 
       <View style={styles.header}>
-        <View style={styles.headerText}>
-          <Text style={styles.reportLabel}>{reportPhaseLabel(result.phase)}</Text>
-          <Text style={styles.scene}>
-            {result.sceneIdentification} · {sceneTypeLabel(result.sceneType)}
-          </Text>
-        </View>
+        <Text style={styles.reportLabel}>Chief's Report</Text>
+        <Text style={styles.imageType}>{imageTypeLabel(result.imageType)}</Text>
         <View style={styles.gradeBadge}>
           <Text style={styles.grade}>{result.shotGrade}</Text>
         </View>
       </View>
 
-      <Card style={styles.observeCard}>
-        <ChiefObservation result={result} />
+      <Card>
+        <Label>Chief's Reaction</Label>
+        <Text style={styles.reaction}>{result.chiefsReaction}</Text>
       </Card>
 
-      <Text style={styles.scoreSectionLabel}>Evaluation</Text>
-
-      <Card style={styles.scoreCard}>
-        <ScoreRing
-          score={result.visualStorytellingScore}
-          label="Visual Storytelling Score"
-        />
-        <View style={styles.scoreCompare}>
-          <View style={styles.scoreBlock}>
-            <Text style={styles.scoreLabel}>Current</Text>
-            <Text style={styles.scoreValue}>{result.currentScore}</Text>
-          </View>
-          <View style={styles.dividerV} />
-          <View style={styles.scoreBlock}>
-            <Text style={styles.scoreLabel}>Potential</Text>
-            <Text style={[styles.scoreValue, styles.potential]}>{result.potentialScore}</Text>
-          </View>
+      <Card style={styles.section}>
+        <Label>What I Saw</Label>
+        <View style={styles.chips}>
+          {result.whatISaw.map((item) => (
+            <View key={item} style={styles.chip}>
+              <Text style={styles.chipText}>{item}</Text>
+            </View>
+          ))}
         </View>
       </Card>
 
-      <Card style={styles.assessmentCard}>
-        <Label>Chief's assessment</Label>
-        <Text style={styles.assessment}>{result.assessment}</Text>
+      <Card style={styles.section}>
+        <FairScoreCard fairScore={result.fairScore} />
       </Card>
 
-      <Card>
-        <PillarScores pillars={result.pillars} />
+      <ListSection title="Why It Works" items={result.whyItWorks} tone="positive" />
+
+      <Card style={styles.assignmentCard}>
+        <Label>Chief's Assignment</Label>
+        <Text style={styles.assignment}>{result.chiefsAssignment}</Text>
       </Card>
 
-      <Card style={styles.seesCard}>
-        <WhatChiefSees items={result.whatChiefSees} />
-      </Card>
-
-      <ListSection title="Strengths" items={result.strengths} tone="positive" />
-      <ListSection title="Improvements" items={result.improvements} />
-      <ListSection title="Recommendations" items={result.recommendations} />
+      <ExpandableFullAnalysis result={result} />
 
       <View style={styles.footer}>
-        {canEnhance && (
-          <Button
-            label="Add Story Context — Enhanced Report"
-            onPress={() => router.push("/story-context")}
-          />
-        )}
-        <Button label="New Shot" onPress={newShot} variant={canEnhance ? "secondary" : "primary"} />
+        <Button label="New Shot" onPress={newShot} />
         <Button
           label="Back to Home"
           variant="ghost"
@@ -146,57 +120,61 @@ const styles = StyleSheet.create({
   },
   heroImage: { width: "100%", height: "100%" },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
     marginBottom: spacing.md,
+    gap: spacing.xs,
   },
-  headerText: { flex: 1, paddingRight: spacing.md },
   reportLabel: { ...typography.label, color: colors.textMuted },
-  scene: {
-    ...typography.caption,
-    color: colors.textSecondary,
-    marginTop: 4,
+  imageType: {
+    ...typography.headline,
+    color: colors.text,
   },
   gradeBadge: {
-    width: 52,
-    height: 52,
+    position: "absolute",
+    right: 0,
+    top: 0,
+    width: 48,
+    height: 48,
     borderRadius: 8,
     backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
   },
   grade: { ...typography.title, color: colors.text },
-  observeCard: { marginBottom: spacing.lg },
-  scoreSectionLabel: {
-    ...typography.label,
-    color: colors.textMuted,
-    marginBottom: spacing.sm,
+  reaction: {
+    ...typography.body,
+    color: colors.text,
+    lineHeight: 26,
+    marginTop: spacing.sm,
   },
-  scoreCard: { marginBottom: spacing.md, alignItems: "center" },
-  assessmentCard: { marginBottom: spacing.md },
-  seesCard: { marginBottom: spacing.lg },
-  assessment: { ...typography.body, color: colors.text, lineHeight: 24 },
-  scoreCompare: {
+  section: { marginTop: spacing.md },
+  chips: {
     flexDirection: "row",
-    width: "100%",
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    paddingTop: spacing.md,
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  chip: {
+    backgroundColor: colors.surface,
+    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  chipText: { ...typography.caption, color: colors.text },
+  assignmentCard: {
     marginTop: spacing.md,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.accent,
   },
-  scoreBlock: { flex: 1, alignItems: "center" },
-  scoreLabel: { ...typography.caption, color: colors.textMuted },
-  scoreValue: { ...typography.score, fontSize: 32, color: colors.text },
-  potential: { color: colors.accent },
-  dividerV: { width: 1, backgroundColor: colors.divider },
-  devNote: {
-    ...typography.caption,
-    color: colors.textMuted,
-    textAlign: "center",
-    marginBottom: spacing.md,
+  assignment: {
+    ...typography.body,
+    color: colors.text,
+    lineHeight: 26,
+    marginTop: spacing.sm,
+    fontWeight: "500",
   },
-  footer: { gap: spacing.sm, marginTop: spacing.md, marginBottom: spacing.xxl },
+  footer: { gap: spacing.sm, marginTop: spacing.xl, marginBottom: spacing.xxl },
   empty: {
     ...typography.body,
     color: colors.textSecondary,

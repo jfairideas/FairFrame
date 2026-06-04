@@ -15,11 +15,13 @@ enabled = true
 site_url = "fairframe://auth/callback"
 additional_redirect_urls = ["fairframe://auth/callback", "exp://127.0.0.1:8081/--/auth/callback"]
 
+# Enable Google/Apple in Supabase Dashboard when OAuth client IDs are ready.
+# CLI deploy fails if these are enabled without client_id / secret.
 [auth.external.google]
-enabled = true
+enabled = false
 
 [auth.external.apple]
-enabled = true
+enabled = false
 
 [functions.analyze-frame]
-verify_jwt = false
+verify_jwt = true

@@ -80,7 +80,7 @@ export default function LoginScreen() {
     <Screen scroll>
       <Text style={styles.title}>Sign in to FairFrame</Text>
       <Text style={styles.subtitle}>
-        Save analysis history, or go straight to camera — Chief needs no mode selection.
+        Save analysis history, or go straight to camera — one photo, Chief's full response.
       </Text>
 
       <Button label="Continue to Camera" onPress={continueToApp} disabled={busy} />

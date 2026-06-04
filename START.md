@@ -43,13 +43,20 @@ Backend is provisioned for project **`fairframe`** (`eaficgjjvtekrqcxlaoy`):
 - Edge function: `analyze-frame` (deployed, JWT verification off)
 - App: `~/fairframe/.env` with Supabase URL + anon key
 
-**One step left for real GPT-4o analysis** — add your OpenAI key as a Supabase secret (never in `.env`):
+**Founder-only Live Chief** — only your signed-in email can trigger OpenAI (20/day max). Everyone else gets offline preview.
+
+1. In `.env`, set `EXPO_PUBLIC_FOUNDER_EMAIL` to the same email you use to sign in.
+2. Set Supabase secrets (never put OpenAI key in `.env`):
 
 ```bash
 cd ~/fairframe
 npx supabase@2.30.4 login
+FOUNDER_EMAILS="your@email.com" ./scripts/set-founder-secrets.sh
 OPENAI_API_KEY=sk-your-key-here ./scripts/set-openai-secret.sh
+npx supabase@2.30.4 functions deploy analyze-frame --project-ref eaficgjjvtekrqcxlaoy
 ```
+
+Apply migration `20250604120000_chief_daily_usage.sql` via Supabase SQL editor or `db push` if using CLI.
 
 Or in the [dashboard → Edge Functions → Secrets](https://supabase.com/dashboard/project/eaficgjjvtekrqcxlaoy/settings/functions): name `OPENAI_API_KEY`, value your `sk-...` key.
 

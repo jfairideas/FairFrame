@@ -15,9 +15,9 @@ export async function saveAnalysisHistory(
 
   const { error } = await supabase.from("analysis_history").insert({
     user_id: user.id,
-    analysis_mode: session.phase,
+    analysis_mode: "initial",
     scene_type: result.sceneType,
-    story_context: session.storyContext ?? null,
+    story_context: null,
     result,
     source,
   });

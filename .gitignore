@@ -11,6 +11,7 @@ web-build/
 *.orig.*
 .env
 .env*.local
+supabase/.temp/
 npm-debug.*
 yarn-debug.*
 yarn-error.*

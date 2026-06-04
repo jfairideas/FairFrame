@@ -1,11 +1,12 @@
 import type {
   CaptureSession,
   ChiefAnalysisResult,
+  ImageType,
   PillarScores,
-  SceneType,
   VisualHierarchyStep,
   WhatChiefSeesItem,
 } from "../types/analysis";
+import { legacyScoreFromFairScore } from "../utils/fairScore";
 import {
   averagePillars,
   buildWhatChiefSeesFromPillars,
@@ -14,207 +15,260 @@ import {
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function gradeFromScore(score: number): ChiefAnalysisResult["shotGrade"] {
-  if (score >= 90) return "A";
-  if (score >= 80) return "B";
-  if (score >= 70) return "C";
-  if (score >= 60) return "D";
+function gradeFromFairScore(fairScore: number): ChiefAnalysisResult["shotGrade"] {
+  if (fairScore >= 9) return "A";
+  if (fairScore >= 8) return "B";
+  if (fairScore >= 7) return "C";
+  if (fairScore >= 6) return "D";
   return "F";
 }
 
-function mockPillars(base: number, enhanced: boolean): PillarScores {
+function mockPillars(base: number): PillarScores {
   const jitter = () => Math.floor(Math.random() * 10) - 4;
   return {
     communication: Math.min(95, base + jitter()),
     focus: Math.min(95, base + jitter()),
     clarity: Math.min(95, base + jitter()),
     context: Math.min(95, base + jitter()),
-    storytelling: Math.min(95, base + jitter() + (enhanced ? 6 : 0)),
+    storytelling: Math.min(95, base + jitter()),
     craft: Math.min(95, base + jitter()),
   };
 }
 
-type MockTemplate = Omit<
-  ChiefAnalysisResult,
-  | "phase"
-  | "pillars"
-  | "visualStorytellingScore"
-  | "shotGrade"
-  | "currentScore"
-  | "potentialScore"
-  | "whatChiefSees"
-  | "assessment"
->;
+interface MockTemplate {
+  chiefsReaction: string;
+  whatISaw: string[];
+  fairScore: number;
+  imageType: ImageType;
+  whyItWorks: string[];
+  chiefsAssignment: string;
+  sceneIdentification: string;
+  visualHierarchy: VisualHierarchyStep[];
+  attentionGrabber: string;
+  valueAssessment: string;
+  hasPrimarySubject: boolean;
+  strengths: string[];
+  improvements: string[];
+  recommendations: string[];
+  assessment: string;
+  whatChiefSeesObs: Partial<Record<keyof PillarScores, string>>;
+}
 
-const KITCHEN_TEMPLATE: MockTemplate = {
-  firstImpression:
-    "This frame feels clean and organized, but my eye keeps bouncing between the bright window above the sink and the refrigerator on the right. The space has strong leading lines along the countertop, but I don't yet know what the story is.",
-  sceneIdentification: "Kitchen interior",
-  visibleObjects: [
-    "Refrigerator",
-    "Sink",
-    "Window",
-    "Upper cabinets",
-    "Countertop",
-    "Cleaning supplies",
-    "Floor tile",
-    "Range hood",
+const COMMERCIAL_LOCATION: MockTemplate = {
+  chiefsReaction:
+    "The gas price sign immediately grabs my attention. I know exactly where I am. What's missing is a human element that would elevate this from a location shot into a stronger photograph.",
+  whatISaw: [
+    "Gas price sign",
+    "Fuel canopy",
+    "Red van",
+    "Asphalt foreground",
+    "Concrete pad",
+    "Sky",
+    "Distant trees",
+    "Utility poles",
   ],
+  fairScore: 6.8,
+  imageType: "commercial",
+  whyItWorks: [
+    "The price sign reads instantly — place and context land without a caption.",
+    "The red van adds a color anchor under the canopy.",
+    "Open sky keeps the frame from feeling cramped.",
+  ],
+  chiefsAssignment:
+    "Make one frame where a person or hands-in-action connects the sign to a human story — same light, tighter composition.",
+  sceneIdentification: "Gas station / commercial location",
   visualHierarchy: [
     {
       rank: 1,
-      element: "Bright window above the sink",
-      why: "Highest luminance in frame — pulls the eye before anything else",
+      element: "Gas price sign",
+      why: "Highest contrast and readable type — immediate orientation",
     },
     {
       rank: 2,
-      element: "White refrigerator on the right",
-      why: "Large vertical mass with high contrast against the darker cabinets",
+      element: "Red van under canopy",
+      why: "Color mass pulls second; adds scale",
     },
     {
       rank: 3,
-      element: "Countertop leading line",
-      why: "Horizontal edge carries the eye from left to right across the scene",
+      element: "Bright sky band",
+      why: "Open luminance along the top edge",
     },
   ],
+  attentionGrabber: "Gas price sign and bright canopy edge",
+  valueAssessment:
+    "Attention is clear but mostly informational — value rises when a human or narrative detail appears.",
   hasPrimarySubject: false,
-  sceneType: "location-scout",
   strengths: [
-    "The window above the sink gives a clear, bright anchor and explains the light direction across the countertop.",
-    "Cabinet lines and the countertop edge create depth from foreground tile to back wall.",
-    "The refrigerator's vertical mass balances the window on the opposite side of the frame.",
+    "Readable establish-er for place.",
+    "Color accent from the van.",
   ],
   improvements: [
-    "The bright window and refrigerator compete equally — decide which one sells the story and darken or reframe the other.",
-    "Cleaning supplies on the counter add clutter in the lower left; clear or reframe so the eye stays on the space.",
-    "No human presence or narrative detail — add a person at the sink or a detail shot of what changed in this kitchen.",
+    "No human element — reads as record, not story.",
+    "Foreground asphalt is a large inactive plane.",
+    "Sign grabs attention but does not yet create emotional stay.",
   ],
   recommendations: [
-    "Shoot a second frame from the left side of the room to reduce the refrigerator's weight and feature the window as establish-er.",
-    "Bracket exposure for the window so you retain outside detail instead of blowing it white.",
-    "Record natural sound at the sink — water, dishes — to anchor the kitchen in audio even if this frame stays wide.",
+    "Move closer so the sign and a person share one plane.",
+    "Shoot a second frame at golden hour for warmer value on the canopy.",
   ],
+  assessment:
+    "You're close on place. The frame proves location fast, but FairScore stays moderate because attention does not yet convert into story value. Add one human beat and re-test hierarchy.",
+  whatChiefSeesObs: {
+    communication: "Sign communicates place immediately; story beat is thin.",
+    focus: "Eye hits the sign first — expected for this scene type.",
+    clarity: "Exposure is readable across the lot.",
+    context: "Canopy and pumps establish commercial context.",
+    storytelling: "Information without a human hook limits stay power.",
+    craft: "Frame is level; foreground could be tighter.",
+  },
 };
 
-const PORTRAIT_TEMPLATE: MockTemplate = {
-  firstImpression:
-    "My eye goes straight to the person in the center of the frame — the face is readable and the background falls off softly. The story feels present, but the brightest strip along the top edge competes for attention.",
-  sceneIdentification: "Interview / portrait setup",
-  visibleObjects: [
-    "Person (primary)",
+const PORTRAIT: MockTemplate = {
+  chiefsReaction:
+    "My eye goes straight to the face — readable expression, workable separation from the wall. You're close; the brightest strip along the top edge is stealing a beat from the eyes.",
+  whatISaw: [
     "Face",
     "Shoulders",
     "Background wall",
-    "Soft light on camera-left",
-    "Upper headroom",
-    "Lower-third safe area",
+    "Soft light camera-left",
+    "Headroom",
+    "Bright top edge",
   ],
+  fairScore: 7.6,
+  imageType: "portrait",
+  whyItWorks: [
+    "Face lands in the center third with broadcast-ready sharpness.",
+    "Shoulder line leaves lower-third room.",
+    "Soft modeling light without harsh under-eye shadow.",
+  ],
+  chiefsAssignment:
+    "Shift half a step to kill the bright top strip, then shoot a tight medium on the eyes — same light, more intimacy.",
+  sceneIdentification: "Portrait / interview setup",
   visualHierarchy: [
-    {
-      rank: 1,
-      element: "Person's face in the center third",
-      why: "Sharp contrast and human scale — natural focal point",
-    },
-    {
-      rank: 2,
-      element: "Bright strip along top of background",
-      why: "Secondary luminance pulls a quick glance off the eyes",
-    },
-    {
-      rank: 3,
-      element: "Blurred background wall",
-      why: "Lower detail keeps separation on the subject",
-    },
+    { rank: 1, element: "Face", why: "Human scale and contrast" },
+    { rank: 2, element: "Bright top strip", why: "Competing luminance" },
+    { rank: 3, element: "Background wall", why: "Low detail — stays subordinate" },
   ],
+  attentionGrabber: "Face in the center third",
+  valueAssessment: "Attention and value align — expression carries stay power.",
   hasPrimarySubject: true,
-  sceneType: "subject-present",
   strengths: [
-    "The person's face in the center third is sharp enough for broadcast with workable separation from the wall.",
-    "Shoulder line and headroom leave space for a lower-third without crowding the chin.",
-    "Soft light on camera-left models the face without harsh under-eye shadow.",
+    "Readable face with clean separation.",
+    "Workable headroom for graphics.",
   ],
   improvements: [
-    "The bright strip along the top of the background steals a beat of attention from the eyes — flag it or reframe.",
-    "Vertical lines in the background merge near the shoulders — shift half a step to clear merges.",
-    "Story beat is emotional but the environment is generic — include one identifying detail in background or foreground.",
+    "Top highlight competes with the eyes.",
+    "Environment is generic — add one identifying detail.",
   ],
   recommendations: [
-    "Tighten to a medium after this wide — same light, same position, more intimacy on the eyes.",
-    "Hold focus on the near eye; recheck at 100% before you roll the interview.",
-    "Capture a cutaway in this space that proves location while the person resets.",
+    "Hold focus on the near eye at 100% before you roll.",
   ],
+  assessment:
+    "Strong human frame with one fixable distraction. FairScore reflects solid communication with room to sharpen hierarchy.",
+  whatChiefSeesObs: {
+    communication: "Expression reads as the message.",
+    focus: "Eyes win first when the top strip is ignored.",
+    clarity: "Even facial exposure.",
+    context: "Neutral wall — person carries place.",
+    storytelling: "Human moment present; environment could prove more.",
+    craft: "Framing is workable; watch the top edge.",
+  },
 };
 
-function buildWhatChiefSeesForTemplate(
-  pillars: PillarScores,
-  template: MockTemplate,
-  enhanced: boolean,
-  assignment?: string
-): WhatChiefSeesItem[] {
-  const obs = template.hasPrimarySubject
-    ? {
-        communication:
-          "The person's expression and posture in the center read as the message — background stays subordinate.",
-        focus: "Eye lands on the face first; the bright top strip is the only serious competitor.",
-        clarity: "Facial exposure is even; skin tones separate from the wall behind the shoulders.",
-        context: "Background is neutral — context comes from the person, not the room details.",
-        storytelling: enhanced && assignment
-          ? `Frame supports "${assignment}" through expression, though environment does not yet prove place.`
-          : "Human moment reads, but the frame alone does not explain why the story matters now.",
-        craft: "Headroom and shoulder framing are workable; watch the bright edge along the top of frame.",
-      }
-    : {
-        communication:
-          "The room communicates domestic space — window and appliances tell 'kitchen' before any caption.",
-        focus: "Brightness at the window wins first; refrigerator on the right pulls second.",
-        clarity: "Overall exposure is readable; window area is brightest and loses exterior detail.",
-        context: "Cabinets, sink, and floor tile establish a lived-in kitchen clearly.",
-        storytelling:
-          "Place is clear, narrative is not — nothing in frame shows action or change yet.",
-        craft: "Countertop line is strong; clutter lower left breaks the otherwise clean geometry.",
-      };
-  return buildWhatChiefSeesFromPillars(pillars, obs);
-}
+const KITCHEN: MockTemplate = {
+  chiefsReaction:
+    "The bright window above the sink owns the frame — I know it's a kitchen. The refrigerator on the right fights it for attention. Decide which element sells the story.",
+  whatISaw: [
+    "Window above sink",
+    "Refrigerator",
+    "Cabinets",
+    "Countertop",
+    "Sink",
+    "Floor tile",
+  ],
+  fairScore: 7.1,
+  imageType: "architecture",
+  whyItWorks: [
+    "Window gives a clear light anchor.",
+    "Counter line adds depth.",
+    "Space reads as lived-in kitchen.",
+  ],
+  chiefsAssignment:
+    "Pick window OR refrigerator as hero — darken the other with position or exposure, then add one detail that shows action at the sink.",
+  sceneIdentification: "Kitchen interior",
+  visualHierarchy: [
+    { rank: 1, element: "Window", why: "Brightest area" },
+    { rank: 2, element: "Refrigerator", why: "Large vertical mass" },
+    { rank: 3, element: "Counter line", why: "Leads across the scene" },
+  ],
+  attentionGrabber: "Window luminance",
+  valueAssessment: "Place is clear; narrative value needs action or detail.",
+  hasPrimarySubject: false,
+  strengths: ["Clear room identity.", "Strong leading line on the counter."],
+  improvements: [
+    "Two equal anchors compete.",
+    "No action at the sink yet.",
+  ],
+  recommendations: [
+    "Bracket the window for exterior detail.",
+  ],
+  assessment:
+    "Good observation frame for space. Value climbs when you commit to one visual hero and add story detail.",
+  whatChiefSeesObs: {
+    communication: "Room type reads fast.",
+    focus: "Window wins first look.",
+    clarity: "Readable exposure except blown window.",
+    context: "Fixtures establish kitchen.",
+    storytelling: "Place without action.",
+    craft: "Geometry is clean; clutter lower left breaks flow.",
+  },
+};
 
-function buildFromTemplate(
-  template: MockTemplate,
-  session: CaptureSession
-): ChiefAnalysisResult {
-  const enhanced = session.phase === "enhanced" && Boolean(session.storyContext);
-  const base = template.hasPrimarySubject ? 76 : 70;
-  const pillars = mockPillars(base, enhanced);
-  const currentScore = averagePillars(pillars);
-  const potentialScore = Math.min(98, currentScore + 7 + Math.floor(Math.random() * 5));
-  const whatChiefSees = buildWhatChiefSeesForTemplate(
-    pillars,
-    template,
-    enhanced,
-    session.storyContext?.assignmentTitle
-  );
-
-  let assessment = template.hasPrimarySubject
-    ? "After observing the interview setup, the person carries the frame with workable face exposure — tighten background distractions before you roll."
-    : "After reading this kitchen, place is clear but story is not — decide whether window or refrigerator is your hero, then shoot detail that proves the beat.";
-
-  if (enhanced && session.storyContext) {
-    assessment = `With your assignment "${session.storyContext.assignmentTitle}" in mind: ${assessment}`;
-  }
+function buildFromTemplate(template: MockTemplate): ChiefAnalysisResult {
+  const pillars = mockPillars(Math.round(template.fairScore * 10));
+  const visualStorytellingScore = legacyScoreFromFairScore(template.fairScore);
+  const whatChiefSees: WhatChiefSeesItem[] = (
+    Object.keys(pillars) as (keyof PillarScores)[]
+  ).map((key) => ({
+    pillar: key as WhatChiefSeesItem["pillar"],
+    rating: scoreToRating(pillars[key as keyof PillarScores]),
+    observation:
+      template.whatChiefSeesObs[key as keyof PillarScores] ??
+      `Chief notes ${key} on this frame.`,
+  }));
 
   return {
-    ...template,
-    phase: session.phase,
+    chiefsReaction: template.chiefsReaction,
+    whatISaw: template.whatISaw,
+    fairScore: template.fairScore,
+    imageType: template.imageType,
+    whyItWorks: template.whyItWorks,
+    chiefsAssignment: template.chiefsAssignment,
+    sceneIdentification: template.sceneIdentification,
+    visibleObjects: template.whatISaw,
+    visualHierarchy: template.visualHierarchy,
+    attentionGrabber: template.attentionGrabber,
+    valueAssessment: template.valueAssessment,
     pillars,
-    visualStorytellingScore: currentScore,
-    shotGrade: gradeFromScore(currentScore),
-    currentScore,
-    potentialScore,
     whatChiefSees,
-    assessment,
+    assessment: template.assessment,
+    strengths: template.strengths,
+    improvements: template.improvements,
+    recommendations: template.recommendations,
+    shotGrade: gradeFromFairScore(template.fairScore),
+    firstImpression: template.chiefsReaction,
+    hasPrimarySubject: template.hasPrimarySubject,
+    sceneType: template.hasPrimarySubject ? "subject-present" : "location-scout",
+    visualStorytellingScore,
+    currentScore: visualStorytellingScore,
+    potentialScore: Math.min(98, visualStorytellingScore + 9),
   };
 }
 
-export async function analyzeWithChief(session: CaptureSession): Promise<ChiefAnalysisResult> {
+export async function analyzeWithChief(_session: CaptureSession): Promise<ChiefAnalysisResult> {
   await delay(2400);
-  const template = Math.random() > 0.45 ? PORTRAIT_TEMPLATE : KITCHEN_TEMPLATE;
-  return buildFromTemplate(template, session);
+  const roll = Math.random();
+  const template =
+    roll > 0.66 ? COMMERCIAL_LOCATION : roll > 0.33 ? PORTRAIT : KITCHEN;
+  return buildFromTemplate(template);
 }

@@ -2,9 +2,9 @@
 
 # Teach People How To See.
 
-FairFrame is an AI-powered visual storytelling coach designed to help photographers, creators, journalists, and visual storytellers improve their ability to communicate through still images.
+FairFrame is an **AI Chief Photographer** designed to help creators understand how humans experience their images and improve their visual judgment over time.
 
-At the center of FairFrame is **Chief**, an AI mentor built to evaluate images through observation, visual communication, storytelling, and craft.
+At the center is **Chief** — a veteran chief photographer and Emmy-level visual storyteller who mentors you on attention, communication, value, and craft.
 
 Most photography tools teach people how to use cameras.
 
@@ -14,99 +14,96 @@ Most photography tools teach people how to use cameras.
 
 ## Why FairFrame Exists
 
-Modern platforms reward:
+Modern platforms reward speed, scrolling, and quantity. FairFrame rewards observation, intentionality, and visual judgment.
 
-- Speed
-- Scrolling
-- Attention addiction
-- Quantity over quality
-
-FairFrame rewards:
-
-- Observation
-- Intentionality
-- Storytelling
-- Visual judgment
-- Craftsmanship
-
-The goal is not to tell users whether a photo is "good" or "bad."
-
-The goal is to help them become stronger visual storytellers over time.
+The goal is not a generic "good" or "bad" label. The goal is mentorship: what humans notice, what keeps them looking, and what you should shoot next.
 
 ---
 
 ## Meet Chief
 
-Chief is FairFrame's AI visual storytelling coach.
+Chief is your AI Chief Photographer — not a camera-settings coach, generic captioner, or influencer.
 
-Chief does not simply score images.
+Chief is:
 
-Chief observes them.
+- A veteran chief photographer and visual storyteller
+- An experienced editor who understands news, documentary, and social attention
+- A mentor who ends every review with **one assignment**
 
-Before evaluating a photo, Chief is designed to:
+Chief is designed to:
 
-1. Identify the scene
-2. Recognize visible objects
-3. Analyze visual hierarchy
-4. Evaluate communication
-5. Assess storytelling potential
-6. Recommend improvements
+1. React like a human chief in the field
+2. List what was actually seen in the frame
+3. Score with **FairScore**
+4. Explain why the image works
+5. Give one clear assignment
+6. Offer deeper analysis when you want to learn more
 
-Every critique is designed to feel like a veteran chief photographer reviewing the image in real time.
-
-Chief's goal is not to judge photographers.
-
-Chief's goal is to help them grow.
+**Tone:** *"You're close. Here's what I'd do next."*
 
 ---
 
-## Chief's Evaluation Framework
+## What FairFrame Measures
 
-Every image is evaluated across six pillars:
+- **What grabs attention?** — What makes a viewer look first?
+- **What creates value?** — What makes them stay and understand?
+- **What would make the image stronger?** — One concrete next step
 
-### Communication
-What is this image saying?
+**Attention** is not the same as **value**. Flash without purpose should not earn a high FairScore.
 
-### Focus
-Where does the eye land first?
+---
 
-### Clarity
-Can the viewer understand the image quickly?
+## Chief's Principles
 
-### Context
-Does the image communicate where we are?
+**Chief evaluates:**
 
-### Storytelling
-Does the image create understanding or curiosity?
+- Composition and visual hierarchy
+- Communication and context
+- Attention and value
+- Craft (light, focus, execution)
 
-### Craft
-How well is the image executed?
+**Chief does NOT evaluate:**
 
-These categories combine into a:
+- Race, ethnicity, or skin tone
+- Attractiveness, body type, gender, or age desirability
+- Sexual appeal
 
-## Visual Storytelling Score
+FairFrame evaluates the **image**, not identity.
+
+---
+
+## Analysis Flow
+
+1. **Chief's Reaction** — direct, conversational mentor read
+2. **What I Saw** — visible elements before critique (builds trust)
+3. **FairScore** — X.X / 10 with clear subtext
+4. **Why It Works** — concise strengths
+5. **Chief's Assignment** — one actionable next step
+6. **Expand Full Analysis** — pillars, hierarchy, deeper teaching
+
+**User flow:** Take photo or upload → receive Chief's response. No story modes or context forms.
+
+---
+
+## FairScore
+
+**FairScore** replaces the old Visual Storytelling Score.
+
+> Chief's assessment of how effectively an image captures attention, communicates its purpose, and creates value for the viewer through visual craft.
+
+Displayed as **FairScore X.X / 10**.
 
 ---
 
 ## Current Features
 
-### MVP Features
-
 - Photo capture and upload
-- AI-powered image analysis
-- Chief's Assessment
-- Visual Storytelling Score
-- Communication scoring
-- Focus scoring
-- Clarity scoring
-- Context scoring
-- Storytelling scoring
-- Craft scoring
-- Analysis history
-- User authentication
-- Guest mode
-- Supabase backend integration
-- OpenAI-powered Chief architecture
+- AI-powered image analysis (Live Chief + offline preview)
+- Chief's Reaction, What I Saw, FairScore, Why It Works, Chief's Assignment
+- Expandable full analysis
+- Analysis history (signed-in users)
+- Authentication and founder-only Live Chief beta
+- Supabase backend and OpenAI via edge functions
 
 ---
 
@@ -114,41 +111,31 @@ These categories combine into a:
 
 ### Completed
 
-- MVP application
-- Expo mobile app
-- Authentication system
-- Analysis history
-- GitHub repository
-- Supabase integration
-- OpenAI integration architecture
+- MVP mobile app (Expo SDK 54)
+- Sprint 4 product flow and FairScore
+- Founder-only Live Chief protections (20 analyses/day)
+- Supabase + GitHub
 
 ### In Progress
 
-- Live Chief testing
-- Scene recognition improvements
-- Visual hierarchy analysis
-- Image-specific critiques
+- Live Chief field testing
+- FairScore calibration across image types
 
 ### Planned
 
-- FairScore
-- Achievement system
-- Progress tracking
+- FairScore progress tracking and improvement analytics
+- Achievements
 - Public creator profiles
 - FairFrame Top 100
-- Subscription features
-- Advanced coaching tools
+- Subscriptions and advanced coaching
 
 ---
 
 ## Technology Stack
 
-- Expo SDK 54
-- React Native
-- Expo Router
-- Supabase
-- OpenAI
-- Edge Functions
+- Expo SDK 54 · React Native · Expo Router
+- Supabase (Auth, Postgres, Edge Functions)
+- OpenAI GPT-4o vision (server-side only)
 
 ---
 
@@ -158,11 +145,7 @@ These categories combine into a:
 
 4x New England Emmy-nominated television photojournalist, visual storyteller, and FAA Part 107 drone pilot.
 
-FairFrame was created from a simple belief:
-
-> Great images are not created by better cameras.
->
-> They are created by better observation.
+> Great images are not created by better cameras. They are created by better observation.
 
 ---
 
@@ -174,7 +157,7 @@ Teach People How To See.
 
 ## Vision
 
-To become the world's most trusted AI visual storytelling coach.
+To become the world's most trusted AI Chief Photographer.
 
 ---
 

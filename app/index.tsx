@@ -12,11 +12,10 @@ export default function WelcomeScreen() {
       <View style={styles.hero}>
         <Text style={styles.brand}>FairFrame</Text>
         <Text style={styles.missionLine}>Teach People How To See.</Text>
-        <Text style={styles.tagline}>Your Pocket Chief Photographer.</Text>
+        <Text style={styles.tagline}>Your AI Chief Photographer.</Text>
         <Text style={styles.mission}>
-          FairFrame is an AI visual storytelling coach — not a settings calculator,
-          not a social network. Chief helps you observe, frame, and tell stronger
-          stories before you hit record.
+          Understand how humans experience your images — what grabs attention,
+          what creates value, and how to improve your visual judgment over time.
         </Text>
       </View>
       <View style={styles.actions}>

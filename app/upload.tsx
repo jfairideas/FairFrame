@@ -25,7 +25,7 @@ export default function UploadScreen() {
 
   const analyze = () => {
     if (!uri) return;
-    setSession({ imageUri: uri, phase: "initial" });
+    setSession({ imageUri: uri });
     router.push("/analysis-loading");
   };
 

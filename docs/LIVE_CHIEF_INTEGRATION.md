@@ -20,6 +20,22 @@ Capture / Upload (app)
 
 OpenAI API key is **never** in the mobile app.
 
+## Founder-only beta protections
+
+Live Chief is gated for founder testing:
+
+| Layer | Behavior |
+|-------|----------|
+| **Edge function** | Requires valid JWT; email must be in `FOUNDER_EMAILS` secret |
+| **Default** | If `FOUNDER_EMAILS` is unset, all live calls return 503 (no OpenAI spend) |
+| **Daily cap** | 20 Live Chief analyses per founder per UTC day |
+| **Rate limit** | Minimum 15 seconds between analyses per founder |
+| **Dedup** | Duplicate `requestId` from the app is rejected (prevents effect re-runs) |
+| **Client** | Non-founders skip `invoke` and use offline preview when `EXPO_PUBLIC_FOUNDER_EMAIL` is set |
+| **JWT** | `verify_jwt = true` on `analyze-frame` |
+
+Guests and other signed-in users always receive **OFFLINE PREVIEW** without OpenAI cost.
+
 ## Setup (one-time)
 
 ### 1. App `.env`
@@ -32,14 +48,18 @@ Set:
 
 - `EXPO_PUBLIC_SUPABASE_URL`
 - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+- `EXPO_PUBLIC_FOUNDER_EMAIL` (same email as your Supabase sign-in)
 
 Restart Expo: `npx expo start --clear`
 
 ### 2. Supabase secrets
 
 ```bash
-supabase secrets set OPENAI_API_KEY=sk-your-key-here
+FOUNDER_EMAILS="your@email.com" ./scripts/set-founder-secrets.sh
+OPENAI_API_KEY=sk-your-key-here ./scripts/set-openai-secret.sh
 ```
+
+Apply `supabase/migrations/20250604120000_chief_daily_usage.sql` before deploying the function.
 
 ### 3. Deploy edge function
 

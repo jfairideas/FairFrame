@@ -1,6 +1,20 @@
-export type SceneType = "subject-present" | "location-scout";
+export type ImageType =
+  | "selfie"
+  | "portrait"
+  | "landscape"
+  | "news"
+  | "documentary"
+  | "street"
+  | "sports"
+  | "wildlife"
+  | "architecture"
+  | "product"
+  | "commercial"
+  | "drone"
+  | "other";
 
-export type ReportPhase = "initial" | "enhanced";
+/** @deprecated Sprint 4 — kept for DB/history compatibility */
+export type SceneType = "subject-present" | "location-scout";
 
 export type ShotGrade = "A" | "B" | "C" | "D" | "F";
 
@@ -13,12 +27,6 @@ export type PillarKey =
   | "craft";
 
 export type PillarRating = "strong" | "good" | "moderate" | "weak";
-
-export interface StoryContext {
-  assignmentTitle: string;
-  storyBeat: string;
-  audience?: string;
-}
 
 export interface PillarScores {
   communication: number;
@@ -35,7 +43,6 @@ export interface WhatChiefSeesItem {
   observation: string;
 }
 
-/** Sprint 3: where the eye travels, with visible anchors */
 export interface VisualHierarchyStep {
   rank: 1 | 2 | 3;
   element: string;
@@ -44,28 +51,36 @@ export interface VisualHierarchyStep {
 
 export interface CaptureSession {
   imageUri: string;
-  phase: ReportPhase;
-  storyContext?: StoryContext;
 }
 
 export interface ChiefAnalysisResult {
-  /** Sprint 3 — before any scores */
-  firstImpression: string;
+  /** Sprint 4 — primary surface */
+  chiefsReaction: string;
+  whatISaw: string[];
+  fairScore: number;
+  imageType: ImageType;
+  whyItWorks: string[];
+  chiefsAssignment: string;
+
+  /** Expandable full analysis */
   sceneIdentification: string;
   visibleObjects: string[];
   visualHierarchy: VisualHierarchyStep[];
-  hasPrimarySubject: boolean;
-
-  assessment: string;
-  phase: ReportPhase;
-  sceneType: SceneType;
+  attentionGrabber: string;
+  valueAssessment: string;
   pillars: PillarScores;
-  visualStorytellingScore: number;
-  shotGrade: ShotGrade;
-  currentScore: number;
-  potentialScore: number;
+  whatChiefSees: WhatChiefSeesItem[];
+  assessment: string;
   strengths: string[];
   improvements: string[];
-  whatChiefSees: WhatChiefSeesItem[];
   recommendations: string[];
+  shotGrade: ShotGrade;
+
+  /** Legacy fields for history / parsers */
+  firstImpression: string;
+  hasPrimarySubject: boolean;
+  sceneType: SceneType;
+  visualStorytellingScore: number;
+  currentScore: number;
+  potentialScore: number;
 }

@@ -1,5 +1,7 @@
 import * as FileSystem from "expo-file-system/legacy";
 import type { CaptureSession, ChiefAnalysisResult } from "../types/analysis";
+import type { EthicsScreenResult } from "../types/ethics";
+import { ETHICS_COPY } from "../types/ethics";
 import { canInvokeLiveChief } from "../lib/liveChiefAccess";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { analyzeWithChief as analyzeMock } from "./mockChief";
@@ -12,10 +14,11 @@ async function imageUriToBase64(uri: string): Promise<string> {
 export type ChiefAnalysisSource = "live-chief" | "offline-preview";
 
 export interface ChiefAnalysisResponse {
-  result: ChiefAnalysisResult;
+  result?: ChiefAnalysisResult;
   source: ChiefAnalysisSource;
-  /** Set when live path failed and mock was used */
   fallbackReason?: string;
+  ethics?: EthicsScreenResult;
+  ethicsRefused?: boolean;
 }
 
 function extractInvokeError(error: unknown, data: unknown): string {
@@ -33,10 +36,26 @@ function extractInvokeError(error: unknown, data: unknown): string {
   return "Unknown error calling analyze-frame";
 }
 
+function parseEthicsFromPayload(payload: Record<string, unknown>): EthicsScreenResult | null {
+  const tier = payload.safety_tier;
+  if (tier !== "green" && tier !== "yellow" && tier !== "red") return null;
+
+  return {
+    safetyTier: tier,
+    reasonCode: (payload.reason_code as EthicsScreenResult["reasonCode"]) ?? "uncertain_restrict",
+    analysisAllowed: Boolean(payload.analysis_allowed ?? tier !== "red"),
+    recognitionAllowed: Boolean(payload.recognition_allowed ?? tier === "green"),
+    cardAllowed: Boolean(payload.card_allowed ?? tier === "green"),
+    progressAllowed: Boolean(payload.progress_allowed ?? tier !== "red"),
+    userMessage:
+      typeof payload.user_message === "string" ? payload.user_message : ETHICS_COPY[tier],
+  };
+}
+
 async function analyzeLive(
   session: CaptureSession,
   requestId: string
-): Promise<ChiefAnalysisResult> {
+): Promise<ChiefAnalysisResponse> {
   const imageBase64 = await imageUriToBase64(session.imageUri);
   const {
     data: { session: authSession },
@@ -51,6 +70,7 @@ async function analyzeLive(
       imageBase64,
       requestId,
       session: {},
+      mode: "analyze",
     },
     headers: { Authorization: `Bearer ${authSession.access_token}` },
   });
@@ -64,16 +84,33 @@ async function analyzeLive(
   }
 
   const payload = data as Record<string, unknown>;
+
+  if (payload.error === "ethics_refused" || payload.safety_tier === "red") {
+    const ethics =
+      parseEthicsFromPayload(payload) ?? {
+        safetyTier: "red" as const,
+        reasonCode: "uncertain_restrict" as const,
+        analysisAllowed: false,
+        recognitionAllowed: false,
+        cardAllowed: false,
+        progressAllowed: false,
+        userMessage: ETHICS_COPY.red,
+      };
+    return { source: "live-chief", ethics, ethicsRefused: true };
+  }
+
   if (payload.error) {
     throw new Error(extractInvokeError(null, payload));
   }
 
-  return parseChiefJson(payload, session);
+  const ethics = parseEthicsFromPayload(payload) ?? undefined;
+  const result = parseChiefJson(payload, session);
+  return { result, source: "live-chief", ethics };
 }
 
 /**
  * Live Chief via Supabase Edge Function + OpenAI (key stays on server).
- * Founder-only during beta; others receive offline preview without OpenAI cost.
+ * Ethics screening runs server-side before Chief.
  */
 export async function analyzeWithChief(
   session: CaptureSession,
@@ -85,6 +122,15 @@ export async function analyzeWithChief(
       result,
       source: "offline-preview",
       fallbackReason: "Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to .env",
+      ethics: {
+        safetyTier: "green",
+        reasonCode: "screening_unavailable",
+        analysisAllowed: true,
+        recognitionAllowed: true,
+        cardAllowed: true,
+        progressAllowed: true,
+        userMessage: ETHICS_COPY.green,
+      },
     };
   }
 
@@ -95,14 +141,22 @@ export async function analyzeWithChief(
       result,
       source: "offline-preview",
       fallbackReason: access.reason,
+      ethics: {
+        safetyTier: "green",
+        reasonCode: "screening_unavailable",
+        analysisAllowed: true,
+        recognitionAllowed: true,
+        cardAllowed: true,
+        progressAllowed: true,
+        userMessage: ETHICS_COPY.green,
+      },
     };
   }
 
   const requestId = options?.requestId ?? `analysis-${Date.now()}`;
 
   try {
-    const result = await analyzeLive(session, requestId);
-    return { result, source: "live-chief" };
+    return await analyzeLive(session, requestId);
   } catch (e) {
     const reason = e instanceof Error ? e.message : "Live Chief unavailable";
     if (__DEV__) {
@@ -113,6 +167,15 @@ export async function analyzeWithChief(
       result,
       source: "offline-preview",
       fallbackReason: reason,
+      ethics: {
+        safetyTier: "green",
+        reasonCode: "screening_unavailable",
+        analysisAllowed: true,
+        recognitionAllowed: true,
+        cardAllowed: true,
+        progressAllowed: true,
+        userMessage: ETHICS_COPY.green,
+      },
     };
   }
 }

@@ -1,5 +1,10 @@
 import { buildChiefSystemPrompt, buildChiefUserPrompt } from "./chiefPrompt.ts";
 import {
+  ethicsRefusalPayload,
+  screenImageEthics,
+  type EthicsScreenResponse,
+} from "./ethicsScreen.ts";
+import {
   getAuthenticatedUser,
   getServiceClient,
   isFounderEmail,
@@ -19,6 +24,7 @@ interface AnalyzeRequest {
   imageBase64: string;
   requestId?: string;
   session?: Record<string, never>;
+  mode?: "ethics_screen" | "analyze";
 }
 
 Deno.serve(async (req) => {
@@ -83,6 +89,19 @@ Deno.serve(async (req) => {
     }
 
     const admin = getServiceClient();
+    const ethics = await screenImageEthics(openaiKey, body.imageBase64);
+    await logEthicsScreening(admin, user.id, ethics);
+
+    if (body.mode === "ethics_screen") {
+      if (ethics.safety_tier === "red") {
+        return json(ethicsRefusalPayload(ethics), 200);
+      }
+      return json(ethics, 200);
+    }
+
+    if (ethics.safety_tier === "red") {
+      return json(ethicsRefusalPayload(ethics), 200);
+    }
 
     const dedup = await registerRequestId(admin, user.id, body.requestId);
     if (!dedup.ok) {
@@ -136,7 +155,18 @@ Deno.serve(async (req) => {
     }
 
     const parsed = JSON.parse(content) as Record<string, unknown>;
-    return json(parsed, 200);
+    return json(
+      {
+        ...parsed,
+        safety_tier: ethics.safety_tier,
+        reason_code: ethics.reason_code,
+        analysis_allowed: ethics.analysis_allowed,
+        recognition_allowed: ethics.recognition_allowed,
+        card_allowed: ethics.card_allowed,
+        progress_allowed: ethics.progress_allowed,
+      },
+      200
+    );
   } catch (e) {
     return json(
       {
@@ -147,6 +177,22 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+async function logEthicsScreening(
+  admin: ReturnType<typeof getServiceClient>,
+  userId: string,
+  ethics: EthicsScreenResponse
+) {
+  await admin.from("ethics_screenings").insert({
+    user_id: userId,
+    safety_tier: ethics.safety_tier,
+    reason_code: ethics.reason_code,
+    analysis_allowed: ethics.analysis_allowed,
+    recognition_allowed: ethics.recognition_allowed,
+    card_allowed: ethics.card_allowed,
+    progress_allowed: ethics.progress_allowed,
+  });
+}
 
 function json(data: unknown, status: number) {
   return new Response(JSON.stringify(data), {

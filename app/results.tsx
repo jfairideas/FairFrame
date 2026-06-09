@@ -7,9 +7,12 @@ import { ExpandableFullAnalysis } from "../src/components/ExpandableFullAnalysis
 import { FairScoreCard } from "../src/components/FairScoreCard";
 import { Label } from "../src/components/Label";
 import { ListSection } from "../src/components/ListSection";
+import { EthicsNotice } from "../src/components/ethics/EthicsNotice";
+import { ProgressWidget } from "../src/components/progress/ProgressWidget";
 import { Screen } from "../src/components/Screen";
 import { useAuth } from "../src/context/AuthContext";
 import { useSession } from "../src/context/SessionContext";
+import { appRoutes } from "../src/lib/appRoutes";
 import { colors, spacing, typography } from "../src/theme";
 import { imageTypeLabel } from "../src/utils/imageType";
 
@@ -18,7 +21,8 @@ const HERO_HEIGHT = Math.round(Dimensions.get("window").height * 0.42);
 export default function ResultsScreen() {
   const router = useRouter();
   const auth = useAuth();
-  const { session, result, analysisSource, chiefFallbackReason, reset } = useSession();
+  const { session, result, analysisSource, chiefFallbackReason, ethics, reset } = useSession();
+  const cardAllowed = ethics?.cardAllowed ?? true;
 
   if (!result) {
     return (
@@ -74,6 +78,22 @@ export default function ResultsScreen() {
         <FairScoreCard fairScore={result.fairScore} />
       </Card>
 
+      {ethics && <EthicsNotice ethics={ethics} />}
+
+      <ProgressWidget variant="compact" />
+
+      {cardAllowed ? (
+        <Button
+          label="PRESS CARD"
+          onPress={() => router.push(appRoutes.cardPreview)}
+          style={styles.pressCardBtn}
+        />
+      ) : (
+        <Text style={styles.cardRestricted}>
+          Press Card recognition is limited for sensitive images.
+        </Text>
+      )}
+
       <ListSection title="Why It Works" items={result.whyItWorks} tone="positive" />
 
       <Card style={styles.assignmentCard}>
@@ -94,15 +114,20 @@ export default function ResultsScreen() {
           }}
         />
         {auth.user && !auth.user.is_anonymous && (
-          <Button
-            label="Sign Out"
-            variant="ghost"
-            onPress={async () => {
-              await auth.signOut();
-              reset();
-              router.replace("/login");
-            }}
-          />
+          <>
+            <Button label="My Progress" variant="secondary" onPress={() => router.push(appRoutes.progress)} />
+            <Button label="Visual DNA" variant="ghost" onPress={() => router.push(appRoutes.dna)} />
+            <Button label="Profile" variant="ghost" onPress={() => router.push(appRoutes.profile)} />
+            <Button
+              label="Sign Out"
+              variant="ghost"
+              onPress={async () => {
+                await auth.signOut();
+                reset();
+                router.replace("/login");
+              }}
+            />
+          </>
         )}
       </View>
     </Screen>
@@ -147,6 +172,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   section: { marginTop: spacing.md },
+  pressCardBtn: { marginTop: spacing.md },
+  cardRestricted: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+    lineHeight: 20,
+  },
   chips: {
     flexDirection: "row",
     flexWrap: "wrap",

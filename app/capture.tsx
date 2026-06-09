@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/Button";
+import { AnalysisRemainingPill } from "../src/components/usage/AnalysisRemainingPill";
 import { useSession } from "../src/context/SessionContext";
 import { colors, spacing, typography } from "../src/theme";
 

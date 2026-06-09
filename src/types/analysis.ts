@@ -53,6 +53,12 @@ export interface CaptureSession {
   imageUri: string;
 }
 
+export interface VisualDnaHints {
+  subjectLean: string;
+  compositionLean: string;
+  lightLean: string;
+}
+
 export interface ChiefAnalysisResult {
   /** Sprint 4 — primary surface */
   chiefsReaction: string;
@@ -61,6 +67,13 @@ export interface ChiefAnalysisResult {
   imageType: ImageType;
   whyItWorks: string[];
   chiefsAssignment: string;
+
+  /** Build 6A — progression fields (derived at parse time) */
+  classification?: string;
+  detectedStrengths?: string[];
+  detectedWeaknesses?: string[];
+  attentionDrivers?: string[];
+  visualDnaHints?: VisualDnaHints;
 
   /** Expandable full analysis */
   sceneIdentification: string;

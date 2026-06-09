@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { Button } from "../src/components/Button";
+import { AnalysisRemainingPill } from "../src/components/usage/AnalysisRemainingPill";
 import { Card } from "../src/components/Card";
 import { Screen } from "../src/components/Screen";
 import { useSession } from "../src/context/SessionContext";
@@ -35,6 +36,8 @@ export default function UploadScreen() {
       <Text style={styles.subtitle}>
         Chief analyzes automatically — subject scene or location scout.
       </Text>
+
+      <AnalysisRemainingPill />
 
       <Card style={styles.previewCard}>
         {uri ? (

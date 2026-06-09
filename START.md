@@ -1,5 +1,8 @@
 # FairFrame — run on your phone
 
+> **Product docs:** See [README.md](README.md) for what FairFrame is today (Build 6A/6B/6C).  
+> **Quick reference:** [docs/FAIRFRAME_OVERVIEW.md](docs/FAIRFRAME_OVERVIEW.md) · [docs/ROADMAP.md](docs/ROADMAP.md)
+
 ## Requirements
 
 - **Expo SDK 54** (matches current Expo Go on the App Store)

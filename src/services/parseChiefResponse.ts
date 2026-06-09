@@ -10,6 +10,7 @@ import type {
   VisualHierarchyStep,
   WhatChiefSeesItem,
 } from "../types/analysis";
+import { getFairScoreClassification } from "./fairLevel";
 import { fairScoreFromLegacy, legacyScoreFromFairScore } from "../utils/fairScore";
 import { normalizeImageType } from "../utils/imageType";
 import {
@@ -197,6 +198,16 @@ export function parseChiefJson(
       : normalizeStrings(normalized.recommendations)[0] ??
         "Reshoot one frame with a single clear visual priority — then bring it back to Chief.";
 
+  const improvements = normalizeStrings(normalized.improvements);
+  const visualHierarchy = parseVisualHierarchy(normalized.visualHierarchy);
+  const attentionGrabber =
+    typeof normalized.attentionGrabber === "string" ? normalized.attentionGrabber : "";
+  const classification = getFairScoreClassification(fairScore);
+  const attentionDrivers = [
+    attentionGrabber,
+    ...visualHierarchy.map((s) => s.element),
+  ].filter((s) => s.length > 0);
+
   return {
     chiefsReaction,
     whatISaw: visibleObjects,
@@ -204,16 +215,22 @@ export function parseChiefJson(
     imageType,
     whyItWorks: strengths.slice(0, 5),
     chiefsAssignment,
+    classification,
+    detectedStrengths: strengths.slice(0, 5),
+    detectedWeaknesses: improvements,
+    attentionDrivers,
+    visualDnaHints: {
+      subjectLean: imageType,
+      compositionLean: visualHierarchy[0]?.element ?? "balanced framing",
+      lightLean: visibleObjects.find((v) => /light|shadow|sun/i.test(v)) ?? "ambient light",
+    },
     sceneIdentification:
       typeof normalized.sceneIdentification === "string"
         ? normalized.sceneIdentification
         : imageType,
     visibleObjects,
-    visualHierarchy: parseVisualHierarchy(normalized.visualHierarchy),
-    attentionGrabber:
-      typeof normalized.attentionGrabber === "string"
-        ? normalized.attentionGrabber
-        : "",
+    visualHierarchy,
+    attentionGrabber,
     valueAssessment:
       typeof normalized.valueAssessment === "string"
         ? normalized.valueAssessment
@@ -225,7 +242,7 @@ export function parseChiefJson(
         ? normalized.assessment
         : chiefsReaction,
     strengths,
-    improvements: normalizeStrings(normalized.improvements),
+    improvements,
     recommendations: normalizeStrings(normalized.recommendations),
     shotGrade: normalizeGrade(normalized.shotGrade, fairScore),
     firstImpression: chiefsReaction,

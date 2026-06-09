@@ -4,10 +4,12 @@ import { ActivityIndicator, Image, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../src/components/Screen";
 import { useSession } from "../src/context/SessionContext";
 import { saveAnalysisHistory } from "../src/services/analysisHistory";
+import { trackEvent } from "../src/services/analytics";
 import { analyzeWithChief } from "../src/services/chief";
 import { colors, spacing, typography } from "../src/theme";
 
 const STEPS = [
+  "Checking content eligibility…",
   "What am I looking at?",
   "What grabbed my attention first?",
   "Does that attention create value?",
@@ -16,7 +18,14 @@ const STEPS = [
 
 export default function AnalysisLoadingScreen() {
   const router = useRouter();
-  const { session, setResult, setAnalysisSource, setChiefFallbackReason } = useSession();
+  const {
+    session,
+    setResult,
+    setAnalysisSource,
+    setChiefFallbackReason,
+    setAnalysisHistoryId,
+    setEthics,
+  } = useSession();
   const [stepIndex, setStepIndex] = useState(0);
   const analysisStartedRef = useRef(false);
   const requestIdRef = useRef(
@@ -43,13 +52,29 @@ export default function AnalysisLoadingScreen() {
 
     let cancelled = false;
 
+    void trackEvent("analysis_started", { request_id: requestIdRef.current });
+
     analyzeWithChief(session, { requestId: requestIdRef.current }).then(
-      async ({ result, source, fallbackReason }) => {
+      async ({ result, source, fallbackReason, ethics, ethicsRefused }) => {
         if (cancelled) return;
+
+        if (ethics) setEthics(ethics);
+
+        if (ethicsRefused || !result) {
+          router.replace("/ethics-refusal");
+          return;
+        }
+
         setResult(result);
         setAnalysisSource(source);
         setChiefFallbackReason(fallbackReason ?? null);
-        await saveAnalysisHistory(session, result, source);
+
+        const analysisId = await saveAnalysisHistory(session, result, source, ethics ?? undefined);
+        setAnalysisHistoryId(analysisId);
+        void trackEvent("analysis_completed", {
+          source,
+          safety_tier: ethics?.safetyTier ?? "green",
+        });
         router.replace("/results");
       }
     );
@@ -57,9 +82,15 @@ export default function AnalysisLoadingScreen() {
     return () => {
       cancelled = true;
     };
-  }, [session, setResult, setAnalysisSource, setChiefFallbackReason, router]);
-
-  const loadingTitle = "Chief is observing your frame";
+  }, [
+    session,
+    setResult,
+    setAnalysisSource,
+    setChiefFallbackReason,
+    setAnalysisHistoryId,
+    setEthics,
+    router,
+  ]);
 
   return (
     <Screen>
@@ -68,10 +99,11 @@ export default function AnalysisLoadingScreen() {
           <Image source={{ uri: session.imageUri }} style={styles.thumb} />
         )}
         <ActivityIndicator size="large" color={colors.accent} style={styles.spinner} />
-        <Text style={styles.title}>{loadingTitle}</Text>
+        <Text style={styles.title}>Chief is observing your frame</Text>
         <Text style={styles.step}>{STEPS[stepIndex]}</Text>
         <Text style={styles.note}>
-          Live Chief runs only for the founder account during beta; others see offline preview.
+          FairFrame checks content eligibility before analysis. Live Chief runs for the founder account
+          during beta; others see offline preview.
         </Text>
       </View>
     </Screen>
@@ -111,5 +143,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: spacing.xl,
     paddingHorizontal: spacing.lg,
+    lineHeight: 18,
   },
 });
